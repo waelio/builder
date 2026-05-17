@@ -1,0 +1,10 @@
+{
+  "name": "waelio-project",
+  "version": "0.0.1",
+  "private": true,
+  "description": "A Waelio blueprint project",
+  "scripts": {
+    "dev": "echo \"Configure your dev script\"",
+    "build": "echo \"Configure your build script\""
+  }
+}

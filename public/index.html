@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waelio Builder</title>
+  <meta name="description" content="Waelio Builder — scaffold projects from blueprints" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0a0f;
+      --surface:#14141f;
+      --border:#1e1e30;
+      --text:#e0e0f0;
+      --muted:#8888aa;
+      --accent:#6c63ff;
+      --accent-glow:rgba(108,99,255,.25);
+      --success:#34d399;
+      --error:#f87171;
+      --radius:12px;
+      --font:'Inter',system-ui,-apple-system,sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .container{width:100%;max-width:560px;padding:2rem}
+    .logo{font-size:1.75rem;font-weight:700;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.25rem}
+    .subtitle{color:var(--muted);font-size:.9rem;margin-bottom:2rem}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem;box-shadow:0 4px 24px rgba(0,0,0,.4)}
+    label{display:block;font-weight:500;font-size:.85rem;margin-bottom:.5rem;color:var(--muted)}
+    textarea{width:100%;min-height:100px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:.75rem;font-family:var(--font);font-size:.9rem;resize:vertical;transition:border-color .2s}
+    textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    .hint{font-size:.75rem;color:var(--muted);margin-top:.35rem}
+    button{width:100%;padding:.85rem;background:linear-gradient(135deg,var(--accent),#7c3aed);color:#fff;font-family:var(--font);font-size:.95rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:transform .15s,box-shadow .2s}
+    button:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--accent-glow)}
+    button:active{transform:translateY(0)}
+    button:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .result{margin-top:1.25rem;padding:1rem;border-radius:8px;font-size:.85rem;font-family:'SF Mono',Consolas,monospace;line-height:1.6;white-space:pre-wrap;display:none}
+    .result.success{display:block;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--success)}
+    .result.error{display:block;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--error)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Waelio Builder</div>
+    <p class="subtitle">Scaffold projects from blueprints</p>
+
+    <div class="card">
+      <label for="projects">Project Names</label>
+      <textarea id="projects" placeholder="my-app&#10;dashboard&#10;api-service"></textarea>
+      <p class="hint">One project name per line</p>
+    </div>
+
+    <button id="submit" type="button">Generate Blueprint</button>
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const btn = document.getElementById('submit');
+    const textarea = document.getElementById('projects');
+    const result = document.getElementById('result');
+
+    btn.addEventListener('click', async () => {
+      const names = textarea.value
+        .split('\n')
+        .map(n => n.trim())
+        .filter(Boolean);
+
+      if (names.length === 0) {
+        result.className = 'result error';
+        result.textContent = 'Please enter at least one project name.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating…';
+      result.className = 'result';
+
+      try {
+        const res = await fetch('/webhooks/blueprints', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projects: names.map(name => ({ name })) })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          result.className = 'result success';
+          result.textContent = `✓ ${data.message}\n\nProjects:\n${data.projects.join('\n')}`;
+        } else {
+          result.className = 'result error';
+          result.textContent = `✗ ${data.error || 'Unknown error'}`;
+        }
+      } catch (err) {
+        result.className = 'result error';
+        result.textContent = `✗ Network error: ${err.message}`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate Blueprint';
+      }
+    });
+  </script>
+</body>
+</html>
