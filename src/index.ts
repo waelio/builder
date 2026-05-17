@@ -6,7 +6,8 @@ type BlueprintPayload = {
   projects?: Array<{ name?: string }>;
 };
 
-const projectsDir = path.resolve(process.cwd(), 'projects');
+const repoRoot = process.env.WAELIO_BUILDER_ROOT ?? path.resolve(__dirname, '..', '..');
+const projectsDir = path.join(repoRoot, 'projects');
 const MAX_BODY_BYTES = 1024 * 1024;
 
 const server = http.createServer((req, res) => {
@@ -51,9 +52,15 @@ const server = http.createServer((req, res) => {
       const created = scaffoldFromBlueprint(projectsDir, projectNames);
       res.writeHead(202, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ message: 'Blueprint accepted', projects: created }));
-    } catch {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        return;
+      }
+
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Failed to process blueprint' }));
     }
   });
 });
