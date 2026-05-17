@@ -11,7 +11,7 @@ export const REQUIRED_PROJECT_FILES = [
   'SEO'
 ] as const;
 
-const TEMPLATE_DIR = path.resolve(__dirname, '..', '..', 'templates', 'project-template');
+const TEMPLATE_DIR = path.resolve(process.cwd(), 'templates', 'project-template');
 
 export const WAELIO_CLI_TOOLS = {
   source: '@waelio/cli',

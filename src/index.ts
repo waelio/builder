@@ -6,7 +6,8 @@ type BlueprintPayload = {
   projects?: Array<{ name?: string }>;
 };
 
-const projectsDir = path.resolve(__dirname, '..', '..', 'projects');
+const projectsDir = path.resolve(process.cwd(), 'projects');
+const MAX_BODY_BYTES = 1024 * 1024;
 
 const server = http.createServer((req, res) => {
   if (req.method !== 'POST' || req.url !== '/webhooks/blueprints') {
@@ -16,11 +17,24 @@ const server = http.createServer((req, res) => {
   }
 
   let body = '';
+  let isRejected = false;
   req.on('data', (chunk) => {
+    if (isRejected) {
+      return;
+    }
     body += chunk;
+    if (body.length > MAX_BODY_BYTES) {
+      isRejected = true;
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Payload too large' }));
+      req.destroy();
+    }
   });
 
   req.on('end', () => {
+    if (isRejected) {
+      return;
+    }
     try {
       const payload = JSON.parse(body || '{}') as BlueprintPayload;
       const projectNames = (payload.projects ?? [])
@@ -45,7 +59,9 @@ const server = http.createServer((req, res) => {
 
 if (require.main === module) {
   const port = Number(process.env.PORT || 3000);
-  server.listen(port);
+  server.listen(port, () => {
+    console.log(`Builder webhook listening on port ${port}`);
+  });
 }
 
 export { server };

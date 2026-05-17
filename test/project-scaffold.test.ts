@@ -12,14 +12,17 @@ test('sanitizeProjectName keeps supported characters', () => {
 test('scaffoldProject creates TypeScript-ready project with required files', () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-test-'));
   const projectsDir = path.join(tempRoot, 'projects');
+  try {
+    const projectDir = scaffoldProject(projectsDir, 'Web Portal');
 
-  const projectDir = scaffoldProject(projectsDir, 'Web Portal');
+    assert.equal(fs.existsSync(path.join(projectDir, 'src', 'index.ts')), true);
+    assert.equal(fs.existsSync(path.join(projectDir, 'tsconfig.json')), true);
+    assert.equal(fs.existsSync(path.join(projectDir, 'gent.md')), true);
 
-  assert.equal(fs.existsSync(path.join(projectDir, 'src', 'index.ts')), true);
-  assert.equal(fs.existsSync(path.join(projectDir, 'tsconfig.json')), true);
-  assert.equal(fs.existsSync(path.join(projectDir, 'gent.md')), true);
-
-  for (const fileName of REQUIRED_PROJECT_FILES) {
-    assert.equal(fs.existsSync(path.join(projectDir, fileName)), true);
+    for (const fileName of REQUIRED_PROJECT_FILES) {
+      assert.equal(fs.existsSync(path.join(projectDir, fileName)), true);
+    }
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
