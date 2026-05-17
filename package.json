@@ -1,0 +1,5 @@
+{
+	"devDependencies": {
+		"@waelio/agent": "^0.2.1"
+	}
+}
