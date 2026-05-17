@@ -41,7 +41,10 @@ export function scaffoldProject(projectsDir: string, projectName: string): strin
     );
   }
 
-  fs.writeFileSync(path.join(projectDir, 'waelio.tools.json'), `${JSON.stringify(WAELIO_CLI_TOOLS, null, 2)}\n`, 'utf8');
+  const toolsPath = path.join(projectDir, 'waelio.tools.json');
+  if (!fs.existsSync(toolsPath)) {
+    fs.writeFileSync(toolsPath, `${JSON.stringify(WAELIO_CLI_TOOLS, null, 2)}\n`, 'utf8');
+  }
 
   for (const file of REQUIRED_PROJECT_FILES) {
     const requiredFilePath = path.join(projectDir, file);

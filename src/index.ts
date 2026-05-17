@@ -18,6 +18,7 @@ const server = http.createServer((req, res) => {
 
   let body = '';
   let isRejected = false;
+  req.setEncoding('utf8');
   req.on('data', (chunk) => {
     if (isRejected) {
       return;
