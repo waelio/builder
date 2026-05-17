@@ -59,6 +59,7 @@ cd readysites/nitro && npx nitro dev --port 3004                    # Nitro
 | Next     | 3002 | http://localhost:3002     | Next.js 16 (Turbo) |
 | Nuxt     | 3003 | http://localhost:3003     | Nuxt 4 + Vite 8    |
 | Nitro    | 3004 | http://localhost:3004     | Nitro 2            |
+| Agent    | 3005 | http://localhost:3005     | @waelio/agent PWA  |
 | PHP      | 8000 | http://localhost:8000     | Laravel (Docker)   |
 
 ### PHP / Laravel (Docker)
