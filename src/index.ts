@@ -1,11 +1,19 @@
+#!/usr/bin/env node
 import express, { Request, Response } from 'express';
 import path from 'node:path';
+import fs from 'node:fs';
 import { scaffoldFromBlueprint } from './project-scaffold';
 import * as ai from './ai';
 
-const repoRoot =
-  process.env.WAELIO_BUILDER_ROOT ?? process.cwd();
-const projectsDir = path.join(repoRoot, 'projects');
+function findRepoRoot() {
+  if (process.env.WAELIO_BUILDER_ROOT) return process.env.WAELIO_BUILDER_ROOT;
+  const distPath = path.resolve(__dirname, '../../public');
+  if (fs.existsSync(distPath)) return path.resolve(__dirname, '../../');
+  return path.resolve(__dirname, '../');
+}
+
+const repoRoot = findRepoRoot();
+const projectsDir = path.join(process.cwd(), 'projects');
 
 const app = express();
 export const server: express.Express = app;

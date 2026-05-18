@@ -4,6 +4,17 @@
   "description": "Utilising all the tools to build websites, according to blueprints",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
+  "bin": {
+    "waelio-builder": "dist/src/index.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "readysites",
+    "public",
+    "waelio-agent-server.js",
+    "waelio-coder.js"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",

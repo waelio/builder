@@ -11,9 +11,14 @@ export const REQUIRED_PROJECT_FILES: string[] = [
   'SEO'
 ];
 
-const REPO_ROOT =
-  process.env.WAELIO_BUILDER_ROOT ?? process.cwd();
+function findRepoRoot() {
+  if (process.env.WAELIO_BUILDER_ROOT) return process.env.WAELIO_BUILDER_ROOT;
+  const distPath = path.resolve(__dirname, '../../templates');
+  if (fs.existsSync(distPath)) return path.resolve(__dirname, '../../');
+  return path.resolve(__dirname, '../');
+}
 
+const REPO_ROOT = findRepoRoot();
 const TEMPLATE_DIR = path.join(REPO_ROOT, 'templates', 'project-template');
 
 export const WAELIO_CLI_TOOLS = {
