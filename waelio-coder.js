@@ -29,7 +29,7 @@ const INCLUDE_EXTENSIONS = [
 ];
 const EXCLUDE_DIRS = [
   'node_modules', '.git', 'dist', '.nuxt', '.next', '.output',
-  'coverage', '.cache', 'pnpm-lock.yaml'
+  'coverage', '.cache', 'pnpm-lock.yaml', 'projects', 'readysites', 'templates'
 ];
 const MAX_FILE_SIZE = 50000; // bytes
 
