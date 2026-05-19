@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import test from 'node:test';
 
 function waitForLine(stream: NodeJS.ReadableStream, match: string, timeoutMs: number): Promise<void> {
@@ -67,6 +68,11 @@ test('e2e webhook scaffolds blueprint project', { timeout: 15000 }, async () => 
     assert.equal(Array.isArray(payload.projects), true);
 
     assert.equal(fs.existsSync(projectDir), true);
+    assert.equal(fs.readFileSync(path.join(projectDir, 'gent.md'), 'utf8').includes('waelio'), true);
+    assert.equal(
+      fs.readFileSync(path.join(projectDir, 'src', 'index.ts'), 'utf8').includes('waelio project template'),
+      true
+    );
     const expectedFiles = [
       'gent.md',
       'ABOUT',
@@ -84,6 +90,7 @@ test('e2e webhook scaffolds blueprint project', { timeout: 15000 }, async () => 
   } finally {
     if (serverProcess.pid && !serverProcess.killed) {
       serverProcess.kill('SIGTERM');
+      await Promise.race([once(serverProcess, 'exit'), new Promise((resolve) => setTimeout(resolve, 2000))]);
     }
     fs.rmSync(projectDir, { recursive: true, force: true });
   }
