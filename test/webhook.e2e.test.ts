@@ -39,7 +39,7 @@ function waitForLine(stream: NodeJS.ReadableStream, match: string, timeoutMs: nu
 test('e2e webhook scaffolds blueprint project', { timeout: 15000 }, async () => {
   const port = 3100 + Math.floor(Math.random() * 500);
   const projectSlug = `e2e-site-${Date.now()}`;
-  const repoRoot = path.resolve(__dirname, '..', '..');
+  const repoRoot = process.cwd();
   const projectDir = path.join(repoRoot, 'projects', projectSlug);
   const serverPath = path.resolve(__dirname, '..', 'src', 'index.js');
 
@@ -67,15 +67,20 @@ test('e2e webhook scaffolds blueprint project', { timeout: 15000 }, async () => 
     assert.equal(Array.isArray(payload.projects), true);
 
     assert.equal(fs.existsSync(projectDir), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'gent.md')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'ABOUT')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'CONTACT')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'about')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'CASL.AUTH')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'MONGODB')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'ORM')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'SEO')), true);
-    assert.equal(fs.existsSync(path.join(projectDir, 'nativescript.config.ts')), true);
+    const expectedFiles = [
+      'gent.md',
+      'ABOUT',
+      'CONTACT',
+      'about',
+      'CASL.AUTH',
+      'MONGODB',
+      'ORM',
+      'SEO',
+      'nativescript.config.ts'
+    ];
+    for (const fileName of expectedFiles) {
+      assert.equal(fs.existsSync(path.join(projectDir, fileName)), true);
+    }
   } finally {
     if (serverProcess.pid && !serverProcess.killed) {
       serverProcess.kill('SIGTERM');
