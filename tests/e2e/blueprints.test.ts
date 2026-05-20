@@ -12,7 +12,7 @@ import express, { Request, Response } from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
-import { scaffoldFromBlueprint } from '../src/project-scaffold';
+import { scaffoldFromBlueprint } from '../../src/project-scaffold';
 
 // ── Test fixtures ──────────────────────────────────────────────
 let tmpProjectsDir: string;
