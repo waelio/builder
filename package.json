@@ -5,7 +5,8 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
-    "waelio-builder": "dist/src/index.js"
+    "waelio-builder": "dist/src/index.js",
+    "waelio-builder-mcp": "dist/src/mcp-server.js"
   },
   "files": [
     "dist",
@@ -18,6 +19,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
+    "mcp:dev": "tsx watch src/mcp-server.ts",
+    "mcp": "node dist/src/mcp-server.js",
     "start": "node dist/src/index.js",
     "clean": "rm -rf dist"
   },

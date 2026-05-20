@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -112,7 +113,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     if (name === 'scaffold_project') {
       const { projectNames } = args as { projectNames: string[] };
-      const projectsDir = path.join(process.cwd(), 'projects');
+      const repoRoot = process.env.WAELIO_BUILDER_ROOT || path.resolve(__dirname, '../../');
+      const projectsDir = path.join(repoRoot, 'projects');
       const created = scaffoldFromBlueprint(projectsDir, projectNames);
       return {
         content: [

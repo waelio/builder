@@ -104,35 +104,58 @@ Each scaffolded project gets:
 - `waelio.tools.json` — CLI tools configuration
 - Required files: `ABOUT`, `CONTACT`, `CASL.AUTH`, `MONGODB`, `ORM`, `SEO`
 
-## Agent Server (MCP)
+## Agent PWA Server (HTTP)
 
-The `waelio-agent-server.js` serves the `@waelio/agent` PWA and acts as a backend adapter between the agent's API and your local Ollama instance.
+The `waelio-agent-server.js` serves the `@waelio/agent` PWA and acts as a backend adapter between the agent's web-based chat UI and your local Ollama instance.
 
-**What it does:**
-- Serves the `@waelio/agent` PWA (chat UI) as static files
-- Translates `/run_sse` requests into Ollama `/api/chat` calls
-- Lists available Ollama models via `/models` → Ollama `/api/tags`
-- Provides session management via `/apps/.../sessions`
+*   **Serves the `@waelio/agent` PWA** as static files on port `3005`.
+*   **Translates `/run_sse` requests** into Ollama `/api/chat` calls.
+*   **Lists available Ollama models** via `/models` → Ollama `/api/tags`.
 
+To start the PWA backend standalone:
 ```bash
-# Start standalone
 AGENT_PORT=3005 node waelio-agent-server.js
-
-# Or via MCP config
 ```
 
-Configure in `mcp_config.json`:
+Then open `http://localhost:3005` in your browser to chat with the agent UI.
 
+---
+
+## Model Context Protocol (MCP) Server
+
+The actual Model Context Protocol (MCP) server runs on stdio transport and exposes project scaffolding and Ollama generation tools directly to AI clients like Cursor or Claude Desktop.
+
+### Configuration for AI Clients (Claude Desktop / Cursor)
+
+To register this MCP server, add the following to your `mcp_config.json` (or `claude_desktop_config.json`):
+
+#### 1. Local Development (Absolute Path)
 ```json
 {
   "mcpServers": {
-    "waelioAgent": {
+    "waelio-builder": {
       "command": "node",
-      "args": ["./waelio-agent-server.js"],
+      "args": ["/Users/waelio/Code/GitHub/waelio/builder/dist/src/mcp-server.js"],
       "env": {
-        "AGENT_PORT": "3005",
         "OLLAMA_URL": "http://127.0.0.1:11434",
-        "OLLAMA_MODEL": "llama3:70b"
+        "OLLAMA_MODEL": "qwen3:8b"
+      }
+    }
+  }
+}
+```
+
+#### 2. Via NPM (Global Command)
+Once published or globally linked, you can run the binary directly:
+```json
+{
+  "mcpServers": {
+    "waelio-builder": {
+      "command": "npx",
+      "args": ["-y", "@waelio/builder", "waelio-builder-mcp"],
+      "env": {
+        "OLLAMA_URL": "http://127.0.0.1:11434",
+        "OLLAMA_MODEL": "qwen3:8b"
       }
     }
   }

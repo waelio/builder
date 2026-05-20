@@ -13,7 +13,7 @@ function findRepoRoot() {
 }
 
 const repoRoot = findRepoRoot();
-const projectsDir = path.join(process.cwd(), 'projects');
+const projectsDir = path.join(repoRoot, 'projects');
 
 const app = express();
 export const server: express.Express = app;
