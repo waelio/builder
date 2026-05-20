@@ -90,3 +90,27 @@ export interface OllamaChatRequest {
   stream: boolean;
   options?: OllamaOptions;
 }
+
+// ── MCP Run Task ───────────────────────────────────────────────
+
+export interface RunTaskOptions {
+  /** The coding task description */
+  task: string;
+  /** Absolute or relative project directory to operate on */
+  projectDir: string;
+  /** Ollama model override */
+  model?: string;
+  /**
+   * When true (default), return the plan + proposed file diffs without
+   * writing anything to disk. When false, auto-apply the changes.
+   */
+  dryRun?: boolean;
+}
+
+export interface ProjectScanResult {
+  projectDir: string;
+  fileCount: number;
+  files: Array<{ path: string; sizeBytes: number }>;
+  /** Truncated combined content for AI context */
+  context: string;
+}

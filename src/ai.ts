@@ -7,7 +7,7 @@ import type {
 
 /**
  * Ollama AI client — lets the builder use local models for code generation,
- * project scaffolding, and code review.
+ * project scaffolding, code review, refactoring, explanation, and test writing.
  */
 
 const OLLAMA_URL: string = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
@@ -39,6 +39,7 @@ export function chat(
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(payload),
         },
+        timeout: 600_000, // 10 min for slow CPUs
       },
       (res) => {
         let data = '';
@@ -62,6 +63,11 @@ export function chat(
 
     req.on('error', (err) => {
       reject(new Error(`Ollama unreachable at ${OLLAMA_URL}: ${err.message}`));
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Ollama request timed out (10 min)'));
     });
 
     req.write(payload);
@@ -104,22 +110,27 @@ export function listModels(): Promise<string[]> {
 
 /**
  * Generate code for a project based on a description.
+ * @param description - What the code should do
+ * @param language - Target language (default: typescript)
+ * @param model - Ollama model override
+ * @param context - Optional surrounding code to inject for better generation
  */
 export async function generateCode(
   description: string,
   language: string = 'typescript',
-  model?: string
+  model?: string,
+  context?: string
 ): Promise<string> {
+  const systemContent = [
+    `You are a senior software engineer. Generate clean, production-ready ${language} code.`,
+    'Return ONLY code — no explanations, no markdown fences. Follow best practices.',
+    context ? `\nExisting code context for reference:\n${context}` : '',
+  ].join('\n').trim();
+
   return chat(
     [
-      {
-        role: 'system',
-        content: `You are a senior software engineer. Generate clean, production-ready ${language} code. Return ONLY code — no explanations, no markdown fences. Follow best practices.`,
-      },
-      {
-        role: 'user',
-        content: description,
-      },
+      { role: 'system', content: systemContent },
+      { role: 'user', content: description },
     ],
     model
   );
@@ -127,22 +138,33 @@ export async function generateCode(
 
 /**
  * Review code and suggest improvements.
+ * @param code - The code to review
+ * @param language - Language of the code (default: typescript)
+ * @param model - Ollama model override
+ * @param focus - Review focus area: 'security' | 'performance' | 'readability' | 'all'
  */
 export async function reviewCode(
   code: string,
   language: string = 'typescript',
-  model?: string
+  model?: string,
+  focus: 'security' | 'performance' | 'readability' | 'all' = 'all'
 ): Promise<string> {
+  const focusInstruction =
+    focus === 'all'
+      ? 'Analyze for bugs, security issues, performance, and readability improvements.'
+      : focus === 'security'
+      ? 'Focus ONLY on security vulnerabilities, injection risks, authentication issues, and data exposure.'
+      : focus === 'performance'
+      ? 'Focus ONLY on performance bottlenecks, inefficient loops, memory leaks, and optimization opportunities.'
+      : 'Focus ONLY on readability: naming, structure, comments, complexity, and maintainability.';
+
   return chat(
     [
       {
         role: 'system',
-        content: `You are a code reviewer. Analyze the following ${language} code for bugs, security issues, and improvements. Be concise and actionable.`,
+        content: `You are a code reviewer. ${focusInstruction} Be concise and actionable. Use numbered bullet points. Language: ${language}.`,
       },
-      {
-        role: 'user',
-        content: code,
-      },
+      { role: 'user', content: code },
     ],
     model
   );
@@ -162,10 +184,7 @@ export async function planProject(
         content:
           'You are a technical architect. Given a project description, output a structured plan with: 1) File structure, 2) Key dependencies, 3) Implementation steps. Be practical and specific.',
       },
-      {
-        role: 'user',
-        content: description,
-      },
+      { role: 'user', content: description },
     ],
     model
   );
@@ -173,6 +192,9 @@ export async function planProject(
 
 /**
  * Ask a general question to the AI.
+ * @param question - The question to ask
+ * @param context - Optional system context / persona to inject
+ * @param model - Ollama model override
  */
 export async function ask(
   question: string,
@@ -191,4 +213,102 @@ export async function ask(
   messages.push({ role: 'user', content: question });
 
   return chat(messages, model);
+}
+
+/**
+ * Refactor code toward specific goals.
+ * @param code - The code to refactor
+ * @param goals - What to achieve, e.g. 'extract reusable function', 'apply DRY', 'rename for clarity'
+ * @param language - Language of the code (default: typescript)
+ * @param model - Ollama model override
+ */
+export async function refactorCode(
+  code: string,
+  goals: string,
+  language: string = 'typescript',
+  model?: string
+): Promise<string> {
+  return chat(
+    [
+      {
+        role: 'system',
+        content: [
+          `You are an expert ${language} engineer specializing in clean code and refactoring.`,
+          'Refactor the provided code according to the given goals.',
+          'Return ONLY the refactored code — no explanations, no markdown fences.',
+          'Preserve all existing functionality unless the goal explicitly changes it.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: `Refactoring goals: ${goals}\n\nCode to refactor:\n${code}`,
+      },
+    ],
+    model
+  );
+}
+
+/**
+ * Explain what a block of code does in plain English.
+ * @param code - The code to explain
+ * @param language - Language of the code (default: typescript)
+ * @param model - Ollama model override
+ */
+export async function explainCode(
+  code: string,
+  language: string = 'typescript',
+  model?: string
+): Promise<string> {
+  return chat(
+    [
+      {
+        role: 'system',
+        content: [
+          `You are a senior ${language} engineer and technical writer.`,
+          'Explain the provided code clearly and concisely for a developer audience.',
+          'Cover: what it does, how it works, any edge cases or gotchas, and notable patterns used.',
+          'Use plain English with short paragraphs. No code blocks unless illustrating a point.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: `Explain this ${language} code:\n\n${code}`,
+      },
+    ],
+    model
+  );
+}
+
+/**
+ * Generate unit tests for a given code snippet.
+ * @param code - The code to write tests for
+ * @param language - Language of the code (default: typescript)
+ * @param framework - Test framework to use (default: vitest)
+ * @param model - Ollama model override
+ */
+export async function writeTests(
+  code: string,
+  language: string = 'typescript',
+  framework: string = 'vitest',
+  model?: string
+): Promise<string> {
+  return chat(
+    [
+      {
+        role: 'system',
+        content: [
+          `You are a senior ${language} engineer who writes thorough unit tests using ${framework}.`,
+          'Generate comprehensive tests for the provided code.',
+          'Cover: happy path, edge cases, error conditions, and boundary values.',
+          `Return ONLY the test file content in ${language} — no explanations, no markdown fences.`,
+          'Import the code under test using relative paths (e.g. ../src/module).',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: `Write ${framework} unit tests for this ${language} code:\n\n${code}`,
+      },
+    ],
+    model
+  );
 }
