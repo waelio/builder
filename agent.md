@@ -17,12 +17,12 @@ The `@waelio/builder` is a self-hosted development platform that consists of:
 1. **Builder API (`src/index.ts`)**: An Express server (Port 3000) that exposes webhooks (`/webhooks/blueprints`) to scaffold new projects from blueprints.
 2. **AI API (`src/ai.ts`)**: HTTP endpoints (`/ai/generate`, `/ai/ask`, etc.) that act as a bridge between readysites and the local Ollama instance.
 3. **Readysites**: Pre-configured frontend/backend starters located in `readysites/` (Nest, Next, Nuxt, Nitro, PHP/Laravel).
-4. **Agent UI**: A local PWA chat interface served on Port 3005 via `waelio-agent-server.js`.
+4. **Agent UI**: A local PWA chat interface served on Port 3005 via `src/agent-server.ts`.
 
 ## Core Responsibilities
 
-When a task is given to you via `waelio-coder.js` or through an interactive prompt, you must:
-- **Write clean, production-ready TypeScript/JavaScript.**
+When a task is given to you via `src/coder.ts` or through an interactive prompt, you must:
+- **Write clean, production-ready TypeScript. No JavaScript. No `any`. No `unknown` leaking into call sites.**
 - **Adhere to the existing architecture.** Do not rewrite entire systems unless specifically requested.
 - **Provide ONLY code when creating or modifying files.** Enclose file changes in markdown code blocks labeled with the file path (e.g., ` ```src/utils.ts `).
 - **Be concise.** Skip lengthy explanations unless asked. You are a tool to get code written quickly.
@@ -31,7 +31,7 @@ When a task is given to you via `waelio-coder.js` or through an interactive prom
 
 - Always output the **full file contents** when modifying a file. Never use shortcuts like `// ... rest of code`.
 - Do not modify files in `node_modules`, `dist`, or hidden output directories.
-- Prioritize native ESM (`import/export`) for new TS files, but respect CommonJS (`require`) if modifying legacy scripts like `waelio-agent-server.js`.
+- Prioritize typed imports/exports for all new TS files. Every function, parameter, and return type **must** be explicitly typed.
 
 ---
-*Note to Wael: You can pass this file directly to the local coder using `./waelio-coder.js --task AGENT.md` to feed the agent its own instructions, or use it as a base system prompt for future AI iterations!*
+*Note to Wael: You can pass this file directly to the local coder using `npx tsx src/coder.ts --task agent.md` to feed the agent its own instructions, or use it as a base system prompt for future AI iterations!*
