@@ -53,6 +53,18 @@ pnpm typecheck
 pnpm test
 ```
 
+### Start Ollama with GPU
+
+For optimal performance, start Ollama with GPU acceleration enabled:
+
+```bash
+# Use GPU (macOS Metal, NVIDIA CUDA, AMD ROCm)
+OLLAMA_NUM_GPU=1 ollama serve
+
+# Or use all GPUs if you have multiple
+OLLAMA_NUM_GPU=-1 ollama serve
+```
+
 ## Available Scripts
 
 | Script           | Description                                         |

@@ -47,19 +47,25 @@ pnpm install
 pnpm build
 ```
 
-3. Start the MCP server:
+3. Start Ollama with GPU (in one terminal):
+
+```bash
+OLLAMA_NUM_GPU=1 ollama serve
+```
+
+4. Start the MCP server (in another terminal):
 
 ```bash
 pnpm mcp
 ```
 
-4. Start the local agent UI:
+5. Start the local agent UI:
 
 ```bash
 pnpm agent
 ```
 
-5. Run local development watch mode:
+6. Run local development watch mode:
 
 ```bash
 pnpm mcp:dev
