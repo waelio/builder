@@ -50,6 +50,12 @@ pnpm build
 3. Start Ollama with GPU (in one terminal):
 
 ```bash
+pnpm ollama:serve:gpu
+```
+
+If you prefer the raw command instead of the script:
+
+```bash
 OLLAMA_NUM_GPU=1 ollama serve
 ```
 

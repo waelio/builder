@@ -21,6 +21,8 @@
     "dev": "tsx watch src/index.ts",
     "mcp:dev": "tsx watch src/mcp-server.ts",
     "mcp": "node dist/src/mcp-server.js",
+    "ollama:serve": "ollama serve",
+    "ollama:serve:gpu": "OLLAMA_NUM_GPU=1 ollama serve",
     "agent:dev": "tsx watch src/agent-server.ts",
     "agent": "node dist/src/agent-server.js",
     "coder:dev": "tsx watch src/coder.ts",
