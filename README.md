@@ -12,22 +12,60 @@ The builder repo contains:
 
 ## Quick Start
 
-```bash
-# Install root dependencies
-pnpm install
+### Install dependencies
 
-# Start the builder server (port 3000)
-pnpm run dev
+```bash
+pnpm install
+```
+
+### Run the builder server
+
+```bash
+pnpm dev
+```
+
+### Build for production
+
+```bash
+pnpm build
+pnpm start
+```
+
+### Start the MCP server
+
+```bash
+pnpm mcp
+```
+
+### Start the local agent UI
+
+```bash
+pnpm agent
+```
+
+### Useful development commands
+
+```bash
+pnpm mcp:dev
+pnpm agent:dev
+pnpm coder:dev
+pnpm typecheck
+pnpm test
 ```
 
 ## Available Scripts
 
-| Script       | Description                              |
-| ------------ | ---------------------------------------- |
-| `pnpm dev`   | Start dev server with hot-reload (tsx)   |
-| `pnpm build` | Compile TypeScript to `dist/`            |
-| `pnpm start` | Run compiled production build            |
-| `pnpm clean` | Remove `dist/` directory                 |
+| Script           | Description                                         |
+| ---------------- | --------------------------------------------------- |
+| `pnpm dev`       | Start dev server with hot-reload (tsx)              |
+| `pnpm build`     | Compile TypeScript to `dist/`                       |
+| `pnpm start`     | Run compiled production build                       |
+| `pnpm clean`     | Remove `dist/` directory                            |
+| `pnpm mcp`       | Run the compiled MCP server                         |
+| `pnpm mcp:dev`   | Run the MCP server from source with watch           |
+| `pnpm agent`     | Run the compiled agent backend server               |
+| `pnpm agent:dev` | Run the agent backend server from source with watch |
+| `pnpm coder:dev` | Run the local coder from source with watch          |
 
 ## Readysites
 
@@ -52,15 +90,15 @@ cd readysites/nitro && npx nitro dev --port 3004                    # Nitro
 
 ### Port Map
 
-| Service  | Port | URL                      | Framework          |
-| -------- | ---- | ------------------------ | ------------------ |
-| Builder  | 3000 | http://localhost:3000     | Express + tsx      |
-| Nest     | 3001 | http://localhost:3001     | NestJS 11          |
-| Next     | 3002 | http://localhost:3002     | Next.js 16 (Turbo) |
-| Nuxt     | 3003 | http://localhost:3003     | Nuxt 4 + Vite 8    |
-| Nitro    | 3004 | http://localhost:3004     | Nitro 2            |
-| Agent    | 3005 | http://localhost:3005     | @waelio/agent PWA  |
-| PHP      | 8000 | http://localhost:8000     | Laravel (Docker)   |
+| Service | Port | URL                   | Framework          |
+| ------- | ---- | --------------------- | ------------------ |
+| Builder | 3000 | http://localhost:3000 | Express + tsx      |
+| Nest    | 3001 | http://localhost:3001 | NestJS 11          |
+| Next    | 3002 | http://localhost:3002 | Next.js 16 (Turbo) |
+| Nuxt    | 3003 | http://localhost:3003 | Nuxt 4 + Vite 8    |
+| Nitro   | 3004 | http://localhost:3004 | Nitro 2            |
+| Agent   | 3005 | http://localhost:3005 | @waelio/agent PWA  |
+| PHP     | 8000 | http://localhost:8000 | Laravel (Docker)   |
 
 ### PHP / Laravel (Docker)
 
@@ -78,27 +116,24 @@ docker compose up -d    # Starts PHP-FPM + Nginx on port 8000
 Scaffolds one or more projects from a blueprint payload.
 
 **Request:**
+
 ```json
 {
-  "projects": [
-    { "name": "my-app" },
-    { "name": "dashboard" }
-  ]
+  "projects": [{ "name": "my-app" }, { "name": "dashboard" }]
 }
 ```
 
 **Response (202):**
+
 ```json
 {
   "message": "Blueprint accepted",
-  "projects": [
-    "/path/to/projects/my-app",
-    "/path/to/projects/dashboard"
-  ]
+  "projects": ["/path/to/projects/my-app", "/path/to/projects/dashboard"]
 }
 ```
 
 Each scaffolded project gets:
+
 - Template files from `templates/project-template/`
 - `gent.md` — agent scaffold descriptor
 - `waelio.tools.json` — CLI tools configuration
@@ -108,11 +143,12 @@ Each scaffolded project gets:
 
 The `waelio-agent-server.js` serves the `@waelio/agent` PWA and acts as a backend adapter between the agent's web-based chat UI and your local Ollama instance.
 
-*   **Serves the `@waelio/agent` PWA** as static files on port `3005`.
-*   **Translates `/run_sse` requests** into Ollama `/api/chat` calls.
-*   **Lists available Ollama models** via `/models` → Ollama `/api/tags`.
+- **Serves the `@waelio/agent` PWA** as static files on port `3005`.
+- **Translates `/run_sse` requests** into Ollama `/api/chat` calls.
+- **Lists available Ollama models** via `/models` → Ollama `/api/tags`.
 
 To start the PWA backend standalone:
+
 ```bash
 AGENT_PORT=3005 node waelio-agent-server.js
 ```
@@ -130,12 +166,15 @@ The actual Model Context Protocol (MCP) server runs on stdio transport and expos
 To register this MCP server, add the following to your `mcp_config.json` (or `claude_desktop_config.json`):
 
 #### 1. Local Development (Absolute Path)
+
 ```json
 {
   "mcpServers": {
     "waelio-builder": {
       "command": "node",
-      "args": ["/Users/waelio/Code/GitHub/waelio/builder/dist/src/mcp-server.js"],
+      "args": [
+        "/Users/waelio/Code/GitHub/waelio/builder/dist/src/mcp-server.js"
+      ],
       "env": {
         "OLLAMA_URL": "http://127.0.0.1:11434",
         "OLLAMA_MODEL": "qwen3:8b"
@@ -146,7 +185,9 @@ To register this MCP server, add the following to your `mcp_config.json` (or `cl
 ```
 
 #### 2. Via NPM (Global Command)
+
 Once published or globally linked, you can run the binary directly:
+
 ```json
 {
   "mcpServers": {
@@ -187,13 +228,13 @@ builder/
 
 ## Environment Variables
 
-| Variable               | Default                    | Description                          |
-| ---------------------- | -------------------------- | ------------------------------------ |
-| `PORT`                 | `3000`                     | Builder server port                  |
-| `WAELIO_BUILDER_ROOT`  | `process.cwd()`            | Override repo root path              |
-| `WAELIO_MODEL`         | `ollama`                   | Agent model backend                  |
-| `OLLAMA_URL`           | `http://127.0.0.1:11434`   | Ollama API endpoint                  |
-| `OLLAMA_MODEL`         | `llama3:70b`               | Model to use with Ollama             |
+| Variable              | Default                  | Description              |
+| --------------------- | ------------------------ | ------------------------ |
+| `PORT`                | `3000`                   | Builder server port      |
+| `WAELIO_BUILDER_ROOT` | `process.cwd()`          | Override repo root path  |
+| `WAELIO_MODEL`        | `ollama`                 | Agent model backend      |
+| `OLLAMA_URL`          | `http://127.0.0.1:11434` | Ollama API endpoint      |
+| `OLLAMA_MODEL`        | `llama3:70b`             | Model to use with Ollama |
 
 ## License
 
