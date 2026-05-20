@@ -6,23 +6,28 @@
   "types": "dist/src/index.d.ts",
   "bin": {
     "waelio-builder": "dist/src/index.js",
-    "waelio-builder-mcp": "dist/src/mcp-server.js"
+    "waelio-builder-mcp": "dist/src/mcp-server.js",
+    "waelio-builder-agent": "dist/src/agent-server.js",
+    "waelio-coder": "dist/src/coder.js"
   },
   "files": [
     "dist",
     "templates",
     "readysites",
-    "public",
-    "waelio-agent-server.js",
-    "waelio-coder.js"
+    "public"
   ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
     "mcp:dev": "tsx watch src/mcp-server.ts",
     "mcp": "node dist/src/mcp-server.js",
+    "agent:dev": "tsx watch src/agent-server.ts",
+    "agent": "node dist/src/agent-server.js",
+    "coder:dev": "tsx watch src/coder.ts",
+    "coder": "node dist/src/coder.js",
     "start": "node dist/src/index.js",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

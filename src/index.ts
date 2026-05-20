@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import express, { Request, Response } from 'express';
+import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
 import { scaffoldFromBlueprint } from './project-scaffold';
 import * as ai from './ai';
+import { getErrorMessage } from './utils';
 
 function findRepoRoot() {
   if (process.env.WAELIO_BUILDER_ROOT) return process.env.WAELIO_BUILDER_ROOT;
@@ -73,7 +75,7 @@ app.get('/ai/models', async (_req: Request, res: Response) => {
     const models = await ai.listModels();
     res.json({ models, default: process.env.OLLAMA_MODEL || 'qwen3:8b' });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
+    const message = getErrorMessage(err);
     res.status(502).json({ error: message });
   }
 });
@@ -142,7 +144,7 @@ app.post('/ai/ask', async (req: Request, res: Response) => {
   }
 });
 
-let serverInstance;
+let serverInstance: http.Server | undefined;
 if (require.main === module) {
   serverInstance = app.listen(port, () => {
     console.log(

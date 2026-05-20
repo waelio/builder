@@ -8,6 +8,7 @@ import {
 import path from 'node:path';
 import { scaffoldFromBlueprint } from './project-scaffold';
 import * as ai from './ai';
+import { getErrorMessage } from './utils';
 
 const server = new Server(
   {
@@ -166,12 +167,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     throw new Error(`Unknown tool: ${name}`);
-  } catch (error: any) {
+  } catch (error) {
     return {
       content: [
         {
           type: 'text',
-          text: `Error executing tool ${name}: ${error.message}`,
+          text: `Error executing tool ${name}: ${getErrorMessage(error)}`,
         },
       ],
       isError: true,

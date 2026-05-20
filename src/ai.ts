@@ -1,31 +1,17 @@
 import http from 'node:http';
+import type {
+  OllamaChatMessage,
+  OllamaChatResponse,
+  OllamaTagsResponse,
+} from './types';
 
 /**
  * Ollama AI client — lets the builder use local models for code generation,
  * project scaffolding, and code review.
  */
 
-const OLLAMA_URL = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen3:8b';
-
-interface OllamaChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-interface OllamaChatResponse {
-  message?: { content: string };
-  error?: string;
-}
-
-interface OllamaModel {
-  name: string;
-  model?: string;
-}
-
-interface OllamaTagsResponse {
-  models?: OllamaModel[];
-}
+const OLLAMA_URL: string = process.env.OLLAMA_URL ?? 'http://127.0.0.1:11434';
+const OLLAMA_MODEL: string = process.env.OLLAMA_MODEL ?? 'qwen3:8b';
 
 /**
  * Send a chat request to Ollama and get a response.
