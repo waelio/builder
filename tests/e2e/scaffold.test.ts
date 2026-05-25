@@ -13,6 +13,7 @@ import {
   sanitizeProjectName,
   scaffoldProject,
   scaffoldFromBlueprint,
+  buildBlueprintReadySites,
   REQUIRED_PROJECT_FILES,
   WAELIO_CLI_TOOLS,
 } from '../../src/project-scaffold';
@@ -164,5 +165,53 @@ describe('scaffoldFromBlueprint', () => {
     const projectsDir = path.join(tmpDir, 'projects');
     const results = scaffoldFromBlueprint(projectsDir, ['abs-test']);
     expect(path.isAbsolute(results[0])).toBe(true);
+  });
+});
+
+// ── buildBlueprintReadySites ────────────────────────────────────
+describe('buildBlueprintReadySites', () => {
+  it('builds hosted ready-site files for scaffolded blueprint projects', () => {
+    const projectsDir = path.join(tmpDir, 'projects');
+    const readySitesDir = path.join(tmpDir, 'readysites', 'ready-sites');
+
+    const result = buildBlueprintReadySites({
+      projectsDir,
+      readySitesDir,
+      baseUrl: 'http://localhost:3000',
+    }, ['My Ready Site']);
+
+    expect(result.projects).toHaveLength(1);
+    expect(result.sites).toHaveLength(1);
+    expect(result.sites[0].name).toBe('my-ready-site');
+    expect(result.sites[0].url).toBe('http://localhost:3000/ready-sites/my-ready-site/');
+    expect(fs.existsSync(path.join(result.sites[0].readySitePath, 'index.html'))).toBe(true);
+    expect(fs.existsSync(path.join(result.sites[0].readySitePath, 'blueprint.json'))).toBe(true);
+
+    const html = fs.readFileSync(path.join(result.sites[0].readySitePath, 'index.html'), 'utf8');
+    expect(html).toContain('@waelio/cli');
+    expect(html).toContain('Siforge Ready Site');
+  });
+
+  it('writes a blueprint manifest for each ready-site', () => {
+    const projectsDir = path.join(tmpDir, 'projects');
+    const readySitesDir = path.join(tmpDir, 'readysites', 'ready-sites');
+
+    const result = buildBlueprintReadySites({
+      projectsDir,
+      readySitesDir,
+    }, ['Manifest Site']);
+
+    const manifestPath = path.join(result.sites[0].readySitePath, 'blueprint.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+      source: string;
+      builder: string;
+      host: string;
+      name: string;
+    };
+
+    expect(manifest.source).toBe('@waelio/cli');
+    expect(manifest.builder).toBe('@waelio/builder');
+    expect(manifest.host).toBe('siforge-ready-sites');
+    expect(manifest.name).toBe('manifest-site');
   });
 });

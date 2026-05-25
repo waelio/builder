@@ -3,7 +3,7 @@ import express, { Request, Response } from 'express';
 import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
-import { scaffoldFromBlueprint } from './project-scaffold';
+import { buildBlueprintReadySites } from './project-scaffold';
 import * as ai from './ai';
 import { getErrorMessage } from './utils';
 
@@ -16,6 +16,7 @@ function findRepoRoot() {
 
 const repoRoot = findRepoRoot();
 const projectsDir = path.join(repoRoot, 'projects');
+const readySitesDir = path.join(repoRoot, 'readysites', 'ready-sites');
 
 const app = express();
 export const server: express.Express = app;
@@ -24,6 +25,7 @@ const port = Number(process.env.PORT || 3000);
 
 // Serve static files for the UI
 app.use(express.static(path.join(repoRoot, 'public')));
+app.use('/ready-sites', express.static(readySitesDir));
 
 // Middleware to parse JSON payloads
 app.use(express.json({ limit: '1mb' }));
@@ -58,10 +60,19 @@ app.post('/webhooks/blueprints', (req: Request, res: Response): void => {
       return;
     }
 
-    const created = scaffoldFromBlueprint(projectsDir, projectNames);
+    const baseUrl = `${req.protocol}://${req.get('host') ?? `localhost:${port}`}`;
+    const result = buildBlueprintReadySites({
+      projectsDir,
+      readySitesDir,
+      baseUrl,
+    }, projectNames);
     res
       .status(202)
-      .json({ message: 'Blueprint accepted', projects: created });
+      .json({
+        message: 'Blueprint accepted',
+        projects: result.projects,
+        sites: result.sites,
+      });
   } catch (error) {
     res.status(500).json({ error: 'Failed to process blueprint' });
   }
