@@ -144,6 +144,11 @@ Scaffolds one or more projects from a blueprint payload.
 }
 ```
 
+The webhook also accepts Siteforge-style single-site payloads when `projects`
+is omitted. The first non-empty value from `project.name`, `project.title`,
+`site.name`, `site.site_name`, `site.domain`, `site_name`, or `siteName` is
+used as the project name.
+
 Each scaffolded project gets:
 
 - Template files from `templates/project-template/`

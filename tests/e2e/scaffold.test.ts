@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {
+  extractProjectNames,
   sanitizeProjectName,
   scaffoldProject,
   scaffoldFromBlueprint,
@@ -63,6 +64,43 @@ describe('sanitizeProjectName', () => {
 
   it('preserves numbers', () => {
     expect(sanitizeProjectName('project42')).toBe('project42');
+  });
+});
+
+// ── extractProjectNames ─────────────────────────────────────────
+describe('extractProjectNames', () => {
+  it('reads project names from the existing blueprint projects array', () => {
+    const names = extractProjectNames({
+      projects: [{ name: 'Alpha' }, { name: '  Beta  ' }, { name: '' }],
+    });
+
+    expect(names).toEqual(['Alpha', 'Beta']);
+  });
+
+  it('reads a Siteforge site_name payload when projects are omitted', () => {
+    const names = extractProjectNames({
+      site_name: 'Siteforge Landing Page',
+    });
+
+    expect(names).toEqual(['Siteforge Landing Page']);
+  });
+
+  it('falls back to nested Siteforge site metadata', () => {
+    const names = extractProjectNames({
+      site: { name: 'Nested Siteforge Site' },
+    });
+
+    expect(names).toEqual(['Nested Siteforge Site']);
+  });
+
+  it('returns an empty list when no usable name exists', () => {
+    const names = extractProjectNames({
+      projects: [{ name: '   ' }],
+      site_name: '   ',
+      site: { name: '' },
+    });
+
+    expect(names).toEqual([]);
   });
 });
 

@@ -27,6 +27,56 @@ export const WAELIO_CLI_TOOLS = {
   externalTools: ['casl', 'mongodb', 'orm', 'seo']
 };
 
+export interface BlueprintProject {
+  name?: string | null;
+  title?: string | null;
+}
+
+export interface BlueprintSite {
+  name?: string | null;
+  site_name?: string | null;
+  domain?: string | null;
+}
+
+export interface BlueprintPayload {
+  projects?: BlueprintProject[];
+  project?: BlueprintProject | null;
+  site?: BlueprintSite | null;
+  site_name?: string | null;
+  siteName?: string | null;
+}
+
+function normalizePayloadName(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
+export function extractProjectNames(payload: BlueprintPayload): string[] {
+  const projectNames = (payload.projects ?? [])
+    .map((project) =>
+      normalizePayloadName(project.name) ?? normalizePayloadName(project.title)
+    )
+    .filter((name): name is string => Boolean(name));
+
+  if (projectNames.length > 0) {
+    return projectNames;
+  }
+
+  const siteforgeName = [
+    payload.project?.name,
+    payload.project?.title,
+    payload.site?.name,
+    payload.site?.site_name,
+    payload.site?.domain,
+    payload.site_name,
+    payload.siteName,
+  ]
+    .map((name) => normalizePayloadName(name))
+    .find((name): name is string => Boolean(name));
+
+  return siteforgeName ? [siteforgeName] : [];
+}
+
 export function sanitizeProjectName(name: string): string {
   return (
     name
