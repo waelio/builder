@@ -65,11 +65,11 @@ export function extractProjectNames(payload: BlueprintPayload): string[] {
   const siteforgeName = [
     payload.project?.name,
     payload.project?.title,
+    payload.site_name,
+    payload.siteName,
     payload.site?.name,
     payload.site?.site_name,
     payload.site?.domain,
-    payload.site_name,
-    payload.siteName,
   ]
     .map((name) => normalizePayloadName(name))
     .find((name): name is string => Boolean(name));

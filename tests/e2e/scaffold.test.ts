@@ -93,6 +93,15 @@ describe('extractProjectNames', () => {
     expect(names).toEqual(['Nested Siteforge Site']);
   });
 
+  it('prefers explicit Siteforge names over domain fallback values', () => {
+    const names = extractProjectNames({
+      site_name: 'Siteforge Display Name',
+      site: { domain: 'display-name.siteforge.test' },
+    });
+
+    expect(names).toEqual(['Siteforge Display Name']);
+  });
+
   it('returns an empty list when no usable name exists', () => {
     const names = extractProjectNames({
       projects: [{ name: '   ' }],
