@@ -17,7 +17,8 @@
     "public"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
+    "prepublishOnly": "npm run build",
     "dev": "tsx watch src/index.ts",
     "mcp:dev": "tsx watch src/mcp-server.ts",
     "mcp": "node dist/src/mcp-server.js",
