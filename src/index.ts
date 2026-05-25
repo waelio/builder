@@ -3,7 +3,11 @@ import express, { Request, Response } from 'express';
 import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
-import { buildBlueprintReadySites } from './project-scaffold';
+import {
+  buildBlueprintReadySites,
+  extractProjectNames,
+  type BlueprintPayload,
+} from './project-scaffold';
 import * as ai from './ai';
 import { getErrorMessage } from './utils';
 
@@ -38,22 +42,11 @@ app.use((_req, res, next) => {
   next();
 });
 
-interface BlueprintProject {
-  name?: string;
-}
-
-interface BlueprintPayload {
-  projects?: BlueprintProject[];
-}
-
 // ── Blueprint webhook ─────────────────────────────────────────
 app.post('/webhooks/blueprints', (req: Request, res: Response): void => {
   try {
-    const payload: BlueprintPayload = req.body;
-
-    const projectNames = (payload.projects ?? [])
-      .map((project) => project.name?.trim())
-      .filter((name): name is string => Boolean(name));
+    const payload = req.body as BlueprintPayload;
+    const projectNames = extractProjectNames(payload);
 
     if (projectNames.length === 0) {
       res.status(400).json({ error: 'No projects provided' });
