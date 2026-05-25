@@ -144,3 +144,4 @@ vite.config.ts.timestamp-*
 
 # Scaffolded project output
 projects/
+readysites/ready-sites/

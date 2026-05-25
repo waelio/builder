@@ -7,7 +7,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import path from 'node:path';
 import fs from 'node:fs';
-import { scaffoldFromBlueprint } from './project-scaffold';
+import { buildBlueprintReadySites } from './project-scaffold';
 import * as ai from './ai';
 import { getErrorMessage } from './utils';
 import type { ProjectFile } from './types';
@@ -130,7 +130,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       // ── Existing (enhanced) ────────────────────────────────
       {
         name: 'scaffold_project',
-        description: 'Scaffolds new projects from a blueprint template in the builder projects directory. Returns the list of created project paths.',
+        description: 'Scaffolds new projects from a blueprint template, builds Siforge ready-sites, and returns created project paths plus hosted URLs.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -380,22 +380,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { projectNames } = args as { projectNames: string[] };
       const repoRoot = process.env.WAELIO_BUILDER_ROOT || path.resolve(__dirname, '../../');
       const projectsDir = path.join(repoRoot, 'projects');
-      const created = scaffoldFromBlueprint(projectsDir, projectNames);
+      const readySitesDir = path.join(repoRoot, 'readysites', 'ready-sites');
+      const baseUrl = process.env.WAELIO_BUILDER_URL || 'http://localhost:3000';
+      const result = buildBlueprintReadySites({
+        projectsDir,
+        readySitesDir,
+        baseUrl,
+      }, projectNames);
 
       // List files created in each project
-      const details = created.map((projectPath) => {
+      const details = result.projects.map((projectPath, index) => {
         let fileList: string[] = [];
         try {
           fileList = fs.readdirSync(projectPath);
         } catch { /* ignore */ }
-        return `${projectPath}\n  Files: ${fileList.join(', ')}`;
+        const site = result.sites[index];
+        return `${projectPath}\n  Files: ${fileList.join(', ')}\n  Ready-site: ${site.url}`;
       });
 
       return {
         content: [
           {
             type: 'text',
-            text: `Successfully scaffolded ${created.length} project(s):\n\n${details.join('\n\n')}`,
+            text: `Successfully scaffolded ${result.projects.length} project(s):\n\n${details.join('\n\n')}`,
           },
         ],
       };

@@ -6,7 +6,7 @@ Utilising all the tools to build websites, according to blueprints.
 
 The builder repo contains:
 
-- **Builder Server** — Express webhook server + UI that scaffolds projects from blueprint payloads
+- **Builder Server** — Express webhook server + UI that scaffolds projects from blueprint payloads and hosts generated Siforge ready-sites
 - **Readysites** — Five framework-specific starter templates (Nest, Next, Nitro, Nuxt, PHP/Laravel)
 - **Agent Server** — MCP-compatible agent launcher using `@waelio/agent` backed by Ollama
 
@@ -125,7 +125,7 @@ docker compose up -d    # Starts PHP-FPM + Nginx on port 8000
 
 ### `POST /webhooks/blueprints`
 
-Scaffolds one or more projects from a blueprint payload.
+Scaffolds one or more projects from a blueprint payload and builds hosted ready-site artifacts under `readysites/ready-sites/`.
 
 **Request:**
 
@@ -140,7 +140,15 @@ Scaffolds one or more projects from a blueprint payload.
 ```json
 {
   "message": "Blueprint accepted",
-  "projects": ["/path/to/projects/my-app", "/path/to/projects/dashboard"]
+  "projects": ["/path/to/projects/my-app", "/path/to/projects/dashboard"],
+  "sites": [
+    {
+      "name": "my-app",
+      "projectPath": "/path/to/projects/my-app",
+      "readySitePath": "/path/to/readysites/ready-sites/my-app",
+      "url": "http://localhost:3000/ready-sites/my-app/"
+    }
+  ]
 }
 ```
 
@@ -155,6 +163,7 @@ Each scaffolded project gets:
 - `gent.md` — agent scaffold descriptor
 - `waelio.tools.json` — CLI tools configuration
 - Required files: `ABOUT`, `CONTACT`, `CASL.AUTH`, `MONGODB`, `ORM`, `SEO`
+- A hosted Siforge ready-site at `/ready-sites/<project-name>/`
 
 ## Agent PWA Server (HTTP)
 
@@ -249,6 +258,7 @@ builder/
 | --------------------- | ------------------------ | ------------------------ |
 | `PORT`                | `3000`                   | Builder server port      |
 | `WAELIO_BUILDER_ROOT` | `process.cwd()`          | Override repo root path  |
+| `WAELIO_BUILDER_URL`  | `http://localhost:3000`  | Public builder URL for MCP ready-site links |
 | `WAELIO_MODEL`        | `ollama`                 | Agent model backend      |
 | `OLLAMA_URL`          | `http://127.0.0.1:11434` | Ollama API endpoint      |
 | `OLLAMA_MODEL`        | `llama3:70b`             | Model to use with Ollama |

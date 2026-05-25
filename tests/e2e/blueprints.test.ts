@@ -12,16 +12,18 @@ import express, { Request, Response } from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
-import { scaffoldFromBlueprint } from '../../src/project-scaffold';
+import { buildBlueprintReadySites } from '../../src/project-scaffold';
 
 // ── Test fixtures ──────────────────────────────────────────────
 let tmpProjectsDir: string;
+let tmpReadySitesDir: string;
 let app: express.Express;
 let server: http.Server;
 
-function buildApp(projectsDir: string): express.Express {
+function buildApp(projectsDir: string, readySitesDir: string): express.Express {
   const a = express();
   a.use(express.json({ limit: '1mb' }));
+  a.use('/ready-sites', express.static(readySitesDir));
   a.use((_req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -44,8 +46,16 @@ function buildApp(projectsDir: string): express.Express {
         return;
       }
 
-      const created = scaffoldFromBlueprint(projectsDir, projectNames);
-      res.status(202).json({ message: 'Blueprint accepted', projects: created });
+      const result = buildBlueprintReadySites({
+        projectsDir,
+        readySitesDir,
+        baseUrl: 'http://127.0.0.1:3000',
+      }, projectNames);
+      res.status(202).json({
+        message: 'Blueprint accepted',
+        projects: result.projects,
+        sites: result.sites,
+      });
     } catch {
       res.status(500).json({ error: 'Failed to process blueprint' });
     }
@@ -56,7 +66,8 @@ function buildApp(projectsDir: string): express.Express {
 
 beforeAll(() => {
   tmpProjectsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'waelio-builder-e2e-'));
-  app = buildApp(tmpProjectsDir);
+  tmpReadySitesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'waelio-ready-sites-e2e-'));
+  app = buildApp(tmpProjectsDir, tmpReadySitesDir);
   server = http.createServer(app);
   return new Promise<void>((resolve) => { server.listen(0, resolve); });
 });
@@ -68,6 +79,7 @@ afterAll(() => {
       else resolve();
     });
     fs.rmSync(tmpProjectsDir, { recursive: true, force: true });
+    fs.rmSync(tmpReadySitesDir, { recursive: true, force: true });
   });
 });
 
@@ -109,6 +121,9 @@ describe('POST /webhooks/blueprints', () => {
     expect(res.body.message).toBe('Blueprint accepted');
     expect(Array.isArray(res.body.projects)).toBe(true);
     expect(res.body.projects).toHaveLength(1);
+    expect(Array.isArray(res.body.sites)).toBe(true);
+    expect(res.body.sites).toHaveLength(1);
+    expect(res.body.sites[0].url).toBe('http://127.0.0.1:3000/ready-sites/my-test-site/');
   });
 
   it('scaffolds multiple projects at once', async () => {
@@ -118,6 +133,7 @@ describe('POST /webhooks/blueprints', () => {
       .expect(202);
 
     expect(res.body.projects).toHaveLength(3);
+    expect(res.body.sites).toHaveLength(3);
   });
 
   it('sanitizes project names with special chars', async () => {
@@ -129,6 +145,7 @@ describe('POST /webhooks/blueprints', () => {
     // Should have been sanitized — no spaces or !
     const created: string[] = res.body.projects as string[];
     expect(created[0]).not.toMatch(/[\s!]/);
+    expect(res.body.sites[0].name).toBe('my-awesome-site');
   });
 
   it('is idempotent — scaffolding same project twice does not error', async () => {
@@ -143,6 +160,20 @@ describe('POST /webhooks/blueprints', () => {
       .expect(202);
 
     expect(res.body.message).toBe('Blueprint accepted');
+  });
+
+  it('serves the generated ready-site over the ready-sites route', async () => {
+    await request(app)
+      .post('/webhooks/blueprints')
+      .send({ projects: [{ name: 'hosted-site' }] })
+      .expect(202);
+
+    const res = await request(app)
+      .get('/ready-sites/hosted-site/')
+      .expect(200);
+
+    expect(res.text).toContain('Siforge Ready Site');
+    expect(res.text).toContain('@waelio/cli');
   });
 
   it('sets CORS headers on the response', async () => {
