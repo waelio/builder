@@ -1,6 +1,6 @@
 {
   "name": "@waelio/builder",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Utilising all the tools to build websites, according to blueprints",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -53,6 +53,15 @@
     "node": ">=20.0.0"
   },
   "license": "MIT",
+  "author": "Wael Wahbeh <waelio@waelio.com> (https://waelio.com)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/waelio/builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/waelio/builder/issues"
+  },
+  "homepage": "https://github.com/waelio/builder#readme",
   "publishConfig": {
     "access": "public"
   }
