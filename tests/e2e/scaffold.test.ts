@@ -10,9 +10,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {
+  extractProjectNames,
   sanitizeProjectName,
   scaffoldProject,
   scaffoldFromBlueprint,
+  buildBlueprintReadySites,
   REQUIRED_PROJECT_FILES,
   WAELIO_CLI_TOOLS,
 } from '../../src/project-scaffold';
@@ -63,6 +65,52 @@ describe('sanitizeProjectName', () => {
 
   it('preserves numbers', () => {
     expect(sanitizeProjectName('project42')).toBe('project42');
+  });
+});
+
+// ── extractProjectNames ─────────────────────────────────────────
+describe('extractProjectNames', () => {
+  it('reads project names from the existing blueprint projects array', () => {
+    const names = extractProjectNames({
+      projects: [{ name: 'Alpha' }, { name: '  Beta  ' }, { name: '' }],
+    });
+
+    expect(names).toEqual(['Alpha', 'Beta']);
+  });
+
+  it('reads a Siteforge site_name payload when projects are omitted', () => {
+    const names = extractProjectNames({
+      site_name: 'Siteforge Landing Page',
+    });
+
+    expect(names).toEqual(['Siteforge Landing Page']);
+  });
+
+  it('falls back to nested Siteforge site metadata', () => {
+    const names = extractProjectNames({
+      site: { name: 'Nested Siteforge Site' },
+    });
+
+    expect(names).toEqual(['Nested Siteforge Site']);
+  });
+
+  it('prefers explicit Siteforge names over domain fallback values', () => {
+    const names = extractProjectNames({
+      site_name: 'Siteforge Display Name',
+      site: { domain: 'display-name.siteforge.test' },
+    });
+
+    expect(names).toEqual(['Siteforge Display Name']);
+  });
+
+  it('returns an empty list when no usable name exists', () => {
+    const names = extractProjectNames({
+      projects: [{ name: '   ' }],
+      site_name: '   ',
+      site: { name: '' },
+    });
+
+    expect(names).toEqual([]);
   });
 });
 
@@ -164,5 +212,53 @@ describe('scaffoldFromBlueprint', () => {
     const projectsDir = path.join(tmpDir, 'projects');
     const results = scaffoldFromBlueprint(projectsDir, ['abs-test']);
     expect(path.isAbsolute(results[0])).toBe(true);
+  });
+});
+
+// ── buildBlueprintReadySites ────────────────────────────────────
+describe('buildBlueprintReadySites', () => {
+  it('builds hosted ready-site files for scaffolded blueprint projects', () => {
+    const projectsDir = path.join(tmpDir, 'projects');
+    const readySitesDir = path.join(tmpDir, 'readysites', 'ready-sites');
+
+    const result = buildBlueprintReadySites({
+      projectsDir,
+      readySitesDir,
+      baseUrl: 'http://localhost:3000',
+    }, ['My Ready Site']);
+
+    expect(result.projects).toHaveLength(1);
+    expect(result.sites).toHaveLength(1);
+    expect(result.sites[0].name).toBe('my-ready-site');
+    expect(result.sites[0].url).toBe('http://localhost:3000/ready-sites/my-ready-site/');
+    expect(fs.existsSync(path.join(result.sites[0].readySitePath, 'index.html'))).toBe(true);
+    expect(fs.existsSync(path.join(result.sites[0].readySitePath, 'blueprint.json'))).toBe(true);
+
+    const html = fs.readFileSync(path.join(result.sites[0].readySitePath, 'index.html'), 'utf8');
+    expect(html).toContain('@waelio/cli');
+    expect(html).toContain('Siforge Ready Site');
+  });
+
+  it('writes a blueprint manifest for each ready-site', () => {
+    const projectsDir = path.join(tmpDir, 'projects');
+    const readySitesDir = path.join(tmpDir, 'readysites', 'ready-sites');
+
+    const result = buildBlueprintReadySites({
+      projectsDir,
+      readySitesDir,
+    }, ['Manifest Site']);
+
+    const manifestPath = path.join(result.sites[0].readySitePath, 'blueprint.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as {
+      source: string;
+      builder: string;
+      host: string;
+      name: string;
+    };
+
+    expect(manifest.source).toBe('@waelio/cli');
+    expect(manifest.builder).toBe('@waelio/builder');
+    expect(manifest.host).toBe('siforge-ready-sites');
+    expect(manifest.name).toBe('manifest-site');
   });
 });

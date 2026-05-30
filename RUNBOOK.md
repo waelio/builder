@@ -9,7 +9,7 @@ The builder is a **self-hosted development platform** with 6 services:
 
 | Service | Port | What It Does |
 |---------|------|--------------|
-| Builder | 3000 | Project scaffold engine + AI API |
+| Builder | 3000 | Project scaffold engine + ready-site host + AI API |
 | Nest    | 3001 | NestJS readysite |
 | Next    | 3002 | Next.js readysite |
 | Nuxt    | 3003 | Nuxt readysite |
@@ -94,7 +94,7 @@ curl -X POST http://localhost:3000/webhooks/blueprints \
   -d '{"projects": [{"name": "my-new-app"}]}'
 ```
 
-Projects are created under `projects/` with all required files.
+Projects are created under `projects/` with all required files. Hosted Siforge ready-sites are built under `readysites/ready-sites/` and served from `http://localhost:3000/ready-sites/<project-name>/`.
 
 ## 6. Troubleshooting
 
