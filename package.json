@@ -1,6 +1,6 @@
 {
   "name": "@waelio/builder",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Utilising all the tools to build websites, according to blueprints",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
