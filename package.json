@@ -7,6 +7,7 @@
   "bin": {
     "waelio-builder": "dist/src/index.js",
     "waelio-builder-mcp": "dist/src/mcp-server.js",
+    "waelio-builder-mcp-http": "dist/src/mcp-server-http.js",
     "waelio-builder-agent": "dist/src/agent-server.js",
     "waelio-coder": "dist/src/coder.js"
   },
@@ -22,6 +23,8 @@
     "dev": "tsx watch src/index.ts",
     "mcp:dev": "tsx watch src/mcp-server.ts",
     "mcp": "node dist/src/mcp-server.js",
+    "mcp:http": "node dist/src/mcp-server-http.js",
+    "mcp:http:dev": "tsx watch src/mcp-server-http.ts",
     "ollama:serve": "ollama serve",
     "ollama:serve:gpu": "OLLAMA_NUM_GPU=1 ollama serve",
     "agent:dev": "tsx watch src/agent-server.ts",
